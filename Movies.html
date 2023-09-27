@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+    <title>Movie List</title>
+</head>
+
+<body>
+    <h1>Movie List</h1>
+    <div>
+        <form onsubmit="searchMovies(event)">
+            <input type="text" id="search-input" placeholder="Search for a movie...">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div>
+        <form id="add-movie-form" onsubmit="addMovie(event)">
+            <input type="text" id="add-movie-title" placeholder="Title">
+            <input type="text" id="add-movie-year" placeholder="Release Year">
+            <input type="text" id="add-movie-rating" placeholder="Rating">
+            <input type="text" id="add-movie-description" placeholder="Description">
+            <button onclick="addMovie()">Add Movie</button>
+        </form>
+    </div>
+    <ul id="movie-list"></ul>
+
+    <script>
+        let moviesData = [];
+
+        function fetchMovies() {
+            fetch('/db.json')
+                .then((response) => response.json())
+                .then((data) => {
+                    moviesData = data.Movies;
+                    displayMovies(moviesData);
+                })
+        }
+
+        function displayMovies(movies) {
+            const movieList = document.getElementById('movie-list');
+            movieList.innerHTML = '';
+
+            movies.forEach((movie) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+            <h2>${movie.title}</h2>
+            <p>Release Year: ${movie.udgivelsesår}</p>
+            <p>Rating: ${movie.Vurdering}</p>
+            <p>Description: ${movie['Kort beskrivelse']}</p>
+            <button onclick="removeMovie('${movie.title}')">Remove</button>
+        `;
+                movieList.appendChild(listItem);
+            });
+        }
+
+        function searchMovies(event) {
+            event.preventDefault();
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput.value.toLowerCase();
+            const matchingMovies = moviesData.filter((movie) => {
+                return movie.title.toLowerCase().includes(searchTerm);
+            });
+
+            displayMovies(matchingMovies);
+        }
+
+        window.addEventListener('load', fetchMovies);
+
+        function addMovie(event) {
+            event.preventDefault();
+            const titleInput = document.getElementById('add-movie-title').value;
+            const yearInput = document.getElementById('add-movie-year').value;
+            const ratingInput = document.getElementById('add-movie-rating').value;
+            const descriptionInput = document.getElementById('add-movie-description').value;
+
+            if (titleInput && yearInput && ratingInput && descriptionInput) {
+                const newMovie = {
+                    title: titleInput,
+                    udgivelsesår: yearInput,
+                    Vurdering: ratingInput,
+                    'Kort beskrivelse': descriptionInput
+                };
+
+                moviesData.push(newMovie);
+                displayMovies(moviesData);
+
+                document.getElementById('add-movie-form').reset();
+            } else {
+                alert('Udfyld alle felterne');
+            }
+        }
+
+        function removeMovie(title) {
+            const indexToRemove = moviesData.findIndex((movie) => movie.title === title);
+
+            if (indexToRemove !== -1) {
+                moviesData.splice(indexToRemove, 1);
+                displayMovies(moviesData);
+            }
+        }
+    </script>
+</body>
+
+</html>
